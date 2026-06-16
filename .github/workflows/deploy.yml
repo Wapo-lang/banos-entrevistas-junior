@@ -38,7 +38,7 @@ jobs:
           npm install
           npm run build
 
-          pm2 stop nestjs-posts-api || true
-          pm2 delete nestjs-posts-api || true
+          pm2 stop banos-entrevistas-junior-api || true
+          pm2 delete banos-entrevistas-junior-api || true
           pm2 start dist/main.js --name banos-entrevistas-junior-api
           pm2 save
