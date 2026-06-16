@@ -1,8 +1,8 @@
-name: 🚀 Deploy NestJS Interviews Simulator API to VPS
+name: 🚀 Deploy NestJS Blog Backend API to VPS
 
 on:
   push:
-    branches: [main, feature/users-entities]
+    branches: [main]
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
       uses: appleboy/scp-action@v0.1.3
       with:
         host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
+        username: root
         key: ${{ secrets.VPS_KEY }}
         source: "."
         target: "/home/banosc/banos-entrevistas-junior"
@@ -25,26 +25,20 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
+        username: root
         key: ${{ secrets.VPS_KEY }}
         script: |
           set -e
-          
-          # 1. Moverse a la subcarpeta real del backend
           cd /home/banosc/banos-entrevistas-junior/simulador_entrevistas
-          
-          # 2. Inyectar las variables de entorno configuradas en tus Secrets
+
+          sudo lsof -t -i:3000 | xargs -r sudo kill -9 || true
+
           printf "%s" "${{ secrets.ENV_FILE }}" > .env
-          
-          # 3. Limpieza e instalación optimizada para cuidar la RAM del VPS
-          rm -rf node_modules package-lock.json
-          npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline
-          
-          # 4. Compilar la aplicación usando nest local
-          npx nest build --clean
-          
-          # 5. Reiniciar de forma segura tu proceso en PM2
-          pm2 stop banos-entrevistas-junior-api || true
-          pm2 delete banos-entrevistas-junior-api || true
+
+          npm install
+          npm run build
+
+          pm2 stop nestjs-posts-api || true
+          pm2 delete nestjs-posts-api || true
           pm2 start dist/main.js --name banos-entrevistas-junior-api
           pm2 save
